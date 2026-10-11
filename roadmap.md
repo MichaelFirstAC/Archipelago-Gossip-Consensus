@@ -5,9 +5,9 @@ Companion to `SPEC.md`. Work through phases in order — do not start a phase un
 ---
 
 ## Phase 0 — Project Scaffolding
-- [ ] Create repo structure exactly as laid out in `SPEC.md` §3
-- [ ] `requirements.txt` populated from `SPEC.md` §7, virtual env created, deps installed
-- [ ] Empty `config/experiment.yaml` created with the shape from `SPEC.md` §6 (values can be placeholders for now)
+- [x] Create repo structure exactly as laid out in `SPEC.md` §3
+- [x] `requirements.txt` populated from `SPEC.md` §7, virtual env created, deps installed
+- [x] Empty `config/experiment.yaml` created with the shape from `SPEC.md` §6 (values can be placeholders for now)
 
 **Done when:** `pip install -r requirements.txt` succeeds and every file/folder in §3 exists (even if empty).
 

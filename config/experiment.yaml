@@ -1,0 +1,19 @@
+agents: 5
+max_rounds: 15
+runs_per_condition: 15
+model: "meta-llama/Meta-Llama-3-8B-Instruct"
+
+primary_grid:
+  latency_ms: [0, 500, 2000]
+  loss_rate: [0.0, 0.15, 0.30]
+  topology: ["mesh"]
+
+secondary_grid:
+  latency_ms: [0, 2000]
+  loss_rate: [0.0, 0.30]
+  topology: ["mesh", "hub_spoke"]
+
+archetype_mix:
+  cooperative: 0.5
+  self_interested: 0.3
+  adversarial: 0.2
