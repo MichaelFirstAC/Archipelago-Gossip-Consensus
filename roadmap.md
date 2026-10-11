@@ -14,14 +14,14 @@ Companion to `SPEC.md`. Work through phases in order — do not start a phase un
 ---
 
 ## Phase 1 — Network Layer (dummy agents only)
-- [ ] `network/node.py`: `Node` class (id, neighbors, inbox, state)
-- [ ] `network/topology.py`: `build_mesh(n)` and `build_hub_spoke(n)`
-- [ ] `network/link.py`: async send with latency sleep + probabilistic drop, emits a log event either way
-- [ ] `network/gossip.py`: push-gossip round loop, respects `max_rounds`
-- [ ] `agents/dummy_agent.py`: returns a scripted or random valid action instantly (no LLM call)
-- [ ] `simulation/consensus.py`: convergence check
-- [ ] `simulation/runner.py`: runs one full trial end-to-end using dummy agents
-- [ ] `logging/run_logger.py`: writes the event log and trial-summary log for one trial
+- [x] `network/node.py`: `Node` class (id, neighbors, inbox, state)
+- [x] `network/topology.py`: `build_mesh(n)` and `build_hub_spoke(n)`
+- [x] `network/link.py`: async send with latency sleep + probabilistic drop, emits a log event either way
+- [x] `network/gossip.py`: push-gossip round loop, respects `max_rounds`
+- [x] `agents/dummy_agent.py`: returns a scripted or random valid action instantly (no LLM call)
+- [x] `simulation/consensus.py`: convergence check
+- [x] `simulation/runner.py`: runs one full trial end-to-end using dummy agents
+- [x] `logging/run_logger.py`: writes the event log and trial-summary log for one trial
 
 **Done when:** running one trial at `latency=0, loss=0` with dummy agents reaches consensus every time, and running it at `loss=1.0` never reaches consensus (sanity-checks that the drop mechanism actually blocks convergence). Event log and trial-summary CSV both produced and readable.
 
