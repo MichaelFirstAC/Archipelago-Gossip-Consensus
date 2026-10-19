@@ -2,12 +2,15 @@
 
 ## 1. Overview
 
-A peer-to-peer simulation where 4–6 LLM-driven agents ("factions") negotiate toward political consensus over a gossip protocol. The network layer injects configurable latency and packet loss. The simulation runs many trials across a grid of conditions and logs everything for statistical analysis. A Pygame visualizer renders one run at a time for demo purposes.
+A peer-to-peer simulation where 4–6 AI agents ("factions") negotiate toward political consensus over a gossip protocol. The network layer injects configurable latency and packet loss. The simulation runs many trials across a grid of conditions and logs everything for statistical analysis. A Pygame visualizer renders one run at a time for demo purposes.
 
-**Primary RQ:** how do latency and packet loss affect time-to-consensus and consensus-failure rate?
-**Secondary RQ:** does topology (mesh vs. hub-and-spoke) change resilience to the same conditions?
+Two kinds of agent run on the same network, so the AI side can compare approaches:
+- **LLM agent**: a locally hosted open-weight LLM (pretrained, prompted, not trained).
+- **Baseline agent**: a non-LLM utility-based agent using a DeGroot-style belief update (written by us, no model needed).
 
-Build order: network layer with dummy/scripted agents first → swap in real LLM agents → batch experiment runner → analysis → visualizer last.
+**Primary RQ (RM course):** how do latency and packet loss affect time-to-consensus and consensus-failure rate?
+**Secondary RQ (RM course):** does topology (mesh vs. hub-and-spoke) change resilience to the same conditions?
+**AI-course comparison (extra, not part of the RM RQs):** how do LLM agents compare with the baseline agent on correctness, consistency and efficiency under the same conditions?
 
 ---
 
@@ -16,49 +19,53 @@ Build order: network layer with dummy/scripted agents first → swap in real LLM
 | Layer | Choice | Why |
 |---|---|---|
 | Language | Python 3.11+ | one language across all layers |
-| Network / concurrency | `asyncio` + `websockets` | simplest way to get real async P2P behavior with controllable delay/drop, no cluster overhead |
-| Agent LLM | local Hugging Face model (e.g. Llama-3-8B-Instruct or Qwen2.5-7B-Instruct), via `transformers` | no API cost, no rate limits across hundreds of runs |
-| Structured output | `litellm` (local model routing) + JSON schema validation via `pydantic` | enforce parsable agent actions, needed since raw LLM JSON is unreliable |
-| Simulation orchestration | plain Python scripts, no Ray | 4–6 agents doesn't need distributed compute; asyncio is enough and far simpler to debug |
-| Logging | `csv` / `pandas` (append-only run logs) | matches analysis stack directly |
-| Analysis | `pandas`, `scipy.stats` (ANOVA), `seaborn`/`matplotlib` | standard stats + plotting |
-| Visualization | `pygame` | 2D island map, single-run playback from a saved log |
-| Config | `pyyaml` (one YAML file per experiment sweep) | keeps conditions declarative, not hardcoded |
+| Network / concurrency | `asyncio` + `websockets` | real async P2P with controllable delay/drop, no cluster overhead |
+| LLM agent | one fixed local open-weight model (default `meta-llama/Meta-Llama-3-8B-Instruct`, backup `Qwen/Qwen2.5-7B-Instruct`) via `transformers` or Ollama | no API cost or rate limits across hundreds of runs; the model is a control variable, so never swap it mid-experiment |
+| Structured output | `litellm` + `pydantic` | enforce parsable agent actions |
+| Baseline agent | plain Python + `numpy` | non-LLM comparison arm, fast and deterministic |
+| Orchestration | plain Python scripts, no Ray | 4–6 agents doesn't need distributed compute |
+| Logging | `csv` / `pandas` | matches the analysis stack |
+| Analysis | `pandas`, `scipy.stats`, `statsmodels`, `seaborn`/`matplotlib` | ANOVA, Mann-Whitney, plots |
+| Visualization | `pygame` | single-run playback from a saved log |
+| Config | `pyyaml` | declarative experiment grids |
 
 ---
 
 ## 3. Repo Structure
 
 ```
-archipelago-consensus/
+archipelago-gossip-consensus/
 ├── config/
-│   └── experiment.yaml          # latency/loss/topology grid, run counts, timeouts
+│   └── experiment.yaml
 ├── src/
 │   ├── network/
-│   │   ├── node.py              # Node class: id, neighbors, inbox/outbox
-│   │   ├── gossip.py            # gossip push protocol, round loop
-│   │   ├── link.py              # simulated link: injects latency + drop probability
-│   │   └── topology.py          # builds mesh / hub-and-spoke adjacency
+│   │   ├── node.py              # Node: id, neighbors, inbox, state
+│   │   ├── gossip.py            # push-gossip round loop
+│   │   ├── link.py              # injects latency + drop probability
+│   │   └── topology.py          # mesh / hub-and-spoke adjacency
 │   ├── agents/
-│   │   ├── llm_agent.py         # wraps local model, builds prompt, calls litellm
-│   │   ├── schema.py            # pydantic models for agent action JSON
-│   │   ├── archetypes.py        # faction personas (cooperative / ambitious / villain)
-│   │   └── dummy_agent.py       # scripted/random agent for testing network layer alone
+│   │   ├── base_agent.py        # shared interface: decide(state, inbox) -> Action
+│   │   ├── dummy_agent.py       # scripted/random, for network testing
+│   │   ├── baseline_agent.py    # NEW: utility-based non-LLM agent
+│   │   ├── belief.py            # NEW: belief update + consensus score (our own AI/math component)
+│   │   ├── llm_agent.py         # wraps the local model, builds prompt, calls litellm
+│   │   ├── schema.py            # pydantic models for the action JSON
+│   │   ├── archetypes.py        # faction personas / utility weights
+│   │   └── factory.py           # NEW: builds the agent type named in config
 │   ├── simulation/
-│   │   ├── runner.py            # single-run orchestrator: init nodes, drive rounds, detect consensus
-│   │   ├── consensus.py         # consensus-check logic (what counts as "unified")
-│   │   └── monte_carlo.py       # sweeps config grid, runs N trials per condition, writes logs
+│   │   ├── runner.py            # one trial
+│   │   ├── consensus.py         # "unified" check (uses belief.py score)
+│   │   └── monte_carlo.py       # sweeps the grid, N trials per condition
 │   ├── logging/
-│   │   └── run_logger.py        # per-event CSV writer (message sent/dropped/received, consensus checkpoint)
+│   │   └── run_logger.py
 │   └── viz/
-│       ├── map_view.py          # Pygame island map + agent nodes
-│       └── playback.py          # replays a saved run log frame by frame
+│       ├── map_view.py
+│       └── playback.py
 ├── analysis/
-│   ├── load_logs.py             # loads all run CSVs into one dataframe
-│   ├── stats.py                 # Two-Way ANOVA, Mann-Whitney for topology
-│   └── plots.py                 # convergence curves, failure-rate heatmap
-├── data/
-│   └── runs/                    # one CSV per run, named by condition + run id
+│   ├── load_logs.py
+│   ├── stats.py                 # ANOVA, Mann-Whitney, LLM-vs-baseline comparison
+│   └── plots.py
+├── data/runs/
 ├── requirements.txt
 └── README.md
 ```
@@ -71,66 +78,96 @@ archipelago-consensus/
 experiment.yaml
       │
       ▼
-monte_carlo.py ──► for each condition (latency, loss, topology):
+monte_carlo.py ──► for each condition (latency, loss, topology, agent_type):
       │                for each of N trials:
       │                    runner.py:
-      │                        1. topology.py builds adjacency for this trial
-      │                        2. node.py instantiates one Node per agent
+      │                        1. topology.py builds adjacency
+      │                        2. factory.py builds one agent per Node (llm | baseline | dummy)
       │                        3. gossip.py drives rounds:
-      │                             - each node picks neighbor(s), sends state via link.py
+      │                             - each node pushes its state to neighbors via link.py
       │                             - link.py sleeps `latency` ms, then drops with `loss` probability
-      │                             - receiving node calls llm_agent.py → gets JSON action
-      │                             - schema.py validates; on failure, retry once, else log parse-failure
+      │                             - receiving node's agent.decide() returns an action + vote
+      │                             - LLM only: schema.py validates, retry once, else log parse-failure
       │                        4. consensus.py checks convergence after each round
-      │                        5. run_logger.py writes every event + final result to data/runs/*.csv
-      │
+      │                        5. run_logger.py writes events + trial summary
       ▼
-analysis/load_logs.py → stats.py (ANOVA / Mann-Whitney) → plots.py (figures for the paper)
-
-viz/playback.py reads one saved run CSV independently, for demo purposes — not in the hot path of experiments.
+analysis/ → stats.py → plots.py
 ```
 
 ---
 
 ## 5. Component Details
 
-### 5.1 Network layer (`src/network/`)
-- **`Node`**: id, faction name, list of neighbor ids (from topology), inbox queue, current belief state (who it's currently allied with / voting for).
-- **`Link`**: wraps a send call — `await asyncio.sleep(latency_ms / 1000)`, then `random.random() < loss_rate` decides drop; if not dropped, delivers to the neighbor's inbox. Every call emits a log event regardless of outcome.
-- **`Gossip`**: standard push-gossip round — each node each round picks one (or k) random neighbors and pushes its current state. Round ends when all nodes have had one send opportunity. Runs for up to `max_rounds` (config, e.g. 15) or until `consensus.py` reports convergence.
-- **`Topology`**: `build_mesh(n)` → fully connected; `build_hub_spoke(n)` → one designated hub node, all others connect only to it. Returns adjacency dict consumed by `Node` init.
+### 5.1 Network layer (`src/network/`) — built in Phase 1
+- **`Node`**: id, faction name, neighbor ids, inbox queue, current state. State must include a `vote` (the outcome this faction currently prefers, e.g. a candidate unifying leader). Add the field if Phase 1 didn't.
+- **`Link`**: `await asyncio.sleep(latency_ms / 1000)`, then drop if `random.random() < loss_rate`; otherwise deliver. Every call is logged either way.
+- **`Gossip`**: each round every node pushes its state to one (or k) random neighbors. Stops at `max_rounds` or when consensus is reached.
+- **`Topology`**: `build_mesh(n)`, `build_hub_spoke(n)`.
 
 ### 5.2 Agent layer (`src/agents/`)
-- **`LLMAgent.decide(state, inbox_messages)`**: builds a first-person prompt from the faction's archetype + current known state + incoming gossip, calls the local model via `litellm`, parses the JSON response against `schema.py`.
-- **Action schema** (pydantic, strict):
-  ```json
-  {
-    "action": "forge_alliance | break_alliance | hold | broadcast_state",
-    "target": "faction_id or null",
-    "dialogue": "short first-person string"
-  }
-  ```
-- **Retry policy**: one retry with a "your last output was invalid JSON, respond again in the exact schema" repair prompt; second failure logs a parse-failure event and the node holds its previous state for that round.
-- **Archetypes**: 3 presets (cooperative, self-interested, adversarial/"deceiver") as system-prompt fragments; assigned per-faction per trial per the config's archetype ratio.
-- **`DummyAgent`**: returns scripted or random valid actions with zero LLM latency — used to validate the network layer end-to-end before the real model is wired in.
+All agents implement `decide(state, inbox) -> Action` so the network never knows which kind it is running.
+
+**Action schema** (pydantic, strict):
+```json
+{
+  "action": "forge_alliance | break_alliance | hold | broadcast_state",
+  "target": "faction_id or null",
+  "vote": "faction_id (preferred unifying leader)",
+  "dialogue": "short first-person string"
+}
+```
+
+**`belief.py` (our own component, shared by the baseline and by the metrics)**
+- Each node keeps a belief vector over the K candidate outcomes (probabilities summing to 1).
+- **DeGroot-style update:** `b_i(t+1) = (1 − s_i) · b_i(t) + s_i · Σ_j T_ij · b_j(t)`, where `s_i` is the faction's openness (stubbornness = 1 − s_i, set by archetype) and `T_ij` are normalized trust weights over the neighbors whose messages arrived this round. Dropped messages simply don't contribute, which is how network loss reaches the agent.
+- **Consensus score:** maximum pairwise total-variation distance between nodes' beliefs (0 = identical). Consensus = all nodes' argmax votes agree and the score is below a threshold `epsilon` (config).
+
+**`baseline_agent.py`**
+- Utility-based agent: picks the vote and action that maximize expected utility `U = w_gain · expected_gain + w_coop · alliance_benefit + w_trust · trust`, computed from its current belief vector. Utility weights come from the archetype (cooperative / self-interested / adversarial).
+- Deterministic given the same state and inbox. No model, near-zero decision latency, so it runs the full grid cheaply.
+
+**`llm_agent.py`**
+- Builds a first-person prompt from archetype + current known state + incoming gossip, calls the local model via `litellm`, validates against `schema.py`.
+- **Retry policy:** one retry with a repair prompt; a second failure logs a parse-failure event and the node holds its previous state that round.
+- **Efficiency rules:** load the model once per process, keep prompts short, cap `max_new_tokens`, fixed temperature and seed from config, log tokens and decision latency per call.
+
+**`dummy_agent.py`**: scripted or random valid actions; keep it for network debugging.
+
+**`archetypes.py`**: three presets (cooperative, self-interested, adversarial). Each provides an LLM system-prompt fragment and baseline utility weights plus openness `s_i`.
+
+**`factory.py`**: returns the agent class named by `agent_type` in config.
 
 ### 5.3 Simulation orchestration (`src/simulation/`)
-- **`runner.py`**: runs exactly one trial given one fully-specified condition (latency, loss, topology, archetype mix); returns a result dict (converged: bool, rounds_to_consensus, message_count, parse_failures).
-- **`consensus.py`**: convergence = all nodes' belief state points to the same outcome (e.g. same allied bloc / same "unified leader"). Checked after every round.
-- **`monte_carlo.py`**: reads `experiment.yaml`, expands the condition grid (3 latency × 3 loss [× 2 topology for the secondary RQ subset]), runs `runs_per_condition` trials of each via `runner.py`, writes one row per trial to a master results CSV plus the full per-event logs.
+- **`runner.py`**: one trial for one fully specified condition; returns a result dict.
+- **`consensus.py`**: convergence check; update it to call the belief consensus score if Phase 1 used a simpler check.
+- **`monte_carlo.py`**: expands the grid and runs `runs_per_condition` trials each. The LLM arm runs the RM design (primary grid plus the secondary topology subset). The baseline arm runs the primary grid and can use more runs because it is cheap.
 
 ### 5.4 Logging (`src/logging/run_logger.py`)
-Two log types per trial:
-- **Event log** (one row per message): `trial_id, round, sender, receiver, sent_at, latency_ms, dropped(bool), delivered_at`
-- **Trial summary** (one row per trial): `trial_id, latency, loss_rate, topology, archetype_mix, converged, rounds_to_consensus, total_messages, parse_failures`
+- **Event log** (one row per message): `trial_id, round, sender, receiver, sent_at, latency_ms, dropped, delivered_at`
+- **Decision log** (one row per agent decision): `trial_id, round, node, agent_type, valid_json, valid_action, vote, baseline_vote, decision_latency_ms, tokens`
+- **Trial summary** (one row per trial): `trial_id, agent_type, latency, loss_rate, topology, archetype_mix, converged, rounds_to_consensus, total_messages, parse_failures`
+
+`baseline_vote` is what the baseline agent would have chosen from the same state; it lets us measure LLM–baseline agreement without a second run.
 
 ### 5.5 Analysis (`analysis/`)
-- `load_logs.py`: concatenates all trial-summary CSVs into one dataframe.
-- `stats.py`: `scipy.stats.f_oneway` / statsmodels Two-Way ANOVA on `rounds_to_consensus ~ latency * loss_rate`; Mann-Whitney U for topology comparison subset.
-- `plots.py`: heatmap of failure rate over the latency×loss grid; line plot of time-to-consensus vs. loss rate faceted by latency.
+- `load_logs.py`: concatenates trial summaries and decision logs.
+- `stats.py`:
+  - RM design: Two-Way ANOVA on `rounds_to_consensus ~ latency * loss_rate`; failure-rate analysis; Mann-Whitney U for topology.
+  - AI comparison: LLM vs baseline on convergence rate, rounds to consensus, and the AI metrics below.
+- `plots.py`: failure-rate heatmap (latency × loss), time-to-consensus vs. loss faceted by latency, topology comparison, LLM-vs-baseline bars.
+
+**AI metrics (reported alongside the network metrics)**
+
+| Metric | Definition |
+|---|---|
+| JSON validity rate | share of LLM outputs that parse against the schema (first attempt) |
+| Action validity rate | share of parsed actions that are legal in the current state |
+| LLM–baseline agreement | share of decisions where the LLM's `vote` equals `baseline_vote` |
+| Decision consistency | share of identical votes when the same state is re-queried several times |
+| Decision latency / tokens | mean time and tokens per decision (efficiency) |
 
 ### 5.6 Visualization (`src/viz/`)
-- Standalone from the experiment loop — reads one saved event log and replays it: islands as nodes on a 2D map, animated dots for in-flight messages, node color shifts as alliances change, dropped messages flash red. Not required for statistical results, only for the demo/presentation.
+Standalone replay of one saved event log: islands as nodes, animated in-flight messages, color shifts as votes change, dropped messages flash red. Demo only.
 
 ---
 
@@ -139,8 +176,13 @@ Two log types per trial:
 ```yaml
 agents: 5
 max_rounds: 15
-runs_per_condition: 15
+runs_per_condition: 15          # LLM arm
+baseline_runs_per_condition: 30 # baseline arm (cheap)
+agent_type: "llm"               # llm | baseline | dummy
 model: "meta-llama/Meta-Llama-3-8B-Instruct"
+temperature: 0.7
+seed: 42
+epsilon: 0.05                   # consensus threshold on belief distance
 
 primary_grid:
   latency_ms: [0, 500, 2000]
@@ -169,6 +211,7 @@ torch>=2.3
 litellm>=1.40
 pydantic>=2.7
 pyyaml>=6.0
+numpy>=1.26
 pandas>=2.2
 scipy>=1.13
 statsmodels>=0.14
@@ -179,10 +222,19 @@ pygame>=2.5
 
 ---
 
-## 8. Build Order (for the vibe-coding tool)
+## 8. Course Alignment (for the AI + DS report)
 
-1. `network/` + `agents/dummy_agent.py` + `simulation/runner.py` for a single trial with dummy agents → confirm gossip rounds, latency injection, and packet drop all work and produce a sane event log.
-2. Swap in `agents/llm_agent.py` + `schema.py` — confirm structured JSON output and the retry-once policy work on a handful of manual trials.
-3. `simulation/monte_carlo.py` — run the full condition grid at reduced scale first (e.g. 2 runs/condition) to sanity-check timing before committing to the full 15/condition sweep.
-4. `analysis/` scripts against the resulting logs.
-5. `viz/` last, purely for the presentation demo.
+| Part of the system | Course it supports | What to explain in the report |
+|---|---|---|
+| LLM agents (pretrained model + prompting, structured output) | AI: NLP / deep learning | why a pretrained LLM, how outputs are validated |
+| Baseline utility agent + DeGroot belief update | AI: agent design, math background | the utility function and update rule, with a worked example |
+| LLM vs baseline comparison and AI metrics | AI: comparing approaches, correctness, efficiency | results tables and discussion |
+| Gossip protocol, fault injection, topology | Distributed Systems | protocol design, failure model, why mesh vs hub-and-spoke |
+
+The RM report covers the research design only (RQs, hypotheses, variables, ethics, references).
+
+---
+
+## 9. Build Order
+
+See `roadmap.md`. Short version: network layer with dummy agents (done) → baseline agent and belief module → LLM agent → batch runs for both arms → analysis → visualizer → report and presentation.

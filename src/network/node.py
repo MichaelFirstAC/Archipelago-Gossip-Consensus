@@ -13,6 +13,7 @@ class Node:
         neighbors: List of peer node IDs adjacent to this node.
         inbox: Asynchronous queue for incoming messages.
         belief: Current belief/allegiance state (e.g., designated leader or allied faction).
+        vote: The outcome this faction currently prefers (preferred unifying leader).
         agent: The decision agent (DummyAgent or LLMAgent) governing this node.
     """
 
@@ -28,6 +29,7 @@ class Node:
         self.faction_name = faction_name or node_id.replace("_", " ").title()
         self.neighbors: List[str] = list(neighbors) if neighbors is not None else []
         self.belief: str = initial_belief if initial_belief is not None else node_id
+        self.vote: str = self.belief
         self.agent: Any = agent
         self.inbox: asyncio.Queue = asyncio.Queue()
 
@@ -52,9 +54,11 @@ class Node:
             "node_id": self.id,
             "faction_name": self.faction_name,
             "belief": self.belief,
+            "vote": self.vote,
         }
 
     def reset(self, initial_belief: Optional[str] = None) -> None:
         """Reset inbox and belief state for a fresh trial run."""
         self.belief = initial_belief if initial_belief is not None else self.id
+        self.vote = self.belief
         self.inbox = asyncio.Queue()

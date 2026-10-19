@@ -3,11 +3,14 @@
 import random
 from typing import Any, Dict, List, Optional
 
+from src.agents.base_agent import BaseAgent
+from src.agents.schema import Action
+
 
 VALID_ACTIONS = ["forge_alliance", "break_alliance", "hold", "broadcast_state"]
 
 
-class DummyAgent:
+class DummyAgent(BaseAgent):
     """Scripted dummy agent providing immediate valid action decisions without LLM calls.
 
     Attributes:
@@ -22,45 +25,47 @@ class DummyAgent:
         self.mode = mode
         self.node_id = node_id
 
-    def decide(
-        self,
-        node_id: str,
-        current_belief: str,
-        inbox_messages: List[Dict[str, Any]],
-        known_neighbors: Optional[List[str]] = None,
-    ) -> Dict[str, Any]:
+    def decide(self, state: Dict[str, Any], inbox: List[Dict[str, Any]]) -> Action:
         """Generate an action decision based on incoming gossip messages.
 
         Args:
-            node_id: The ID of the current node.
-            current_belief: The current faction/leader belief of this node.
-            inbox_messages: List of message dictionaries delivered during this round.
-            known_neighbors: List of neighboring node IDs.
+            state: Node state with 'node_id', 'belief', 'vote' and 'neighbors'.
+            inbox: List of message dictionaries delivered during this round.
 
         Returns:
-            Dictionary matching the agent action schema:
-            {'action': str, 'target': Optional[str], 'dialogue': str}
+            An Action matching the agent action schema.
         """
+        node_id = state["node_id"]
+        current_belief = state["belief"]
+        current_vote = state.get("vote", current_belief)
+        neighbors = state.get("neighbors") or []
+
         if self.mode == "random":
             action = random.choice(VALID_ACTIONS)
-            target = random.choice(known_neighbors) if known_neighbors and action in ("forge_alliance", "break_alliance", "broadcast_state") else None
-            return {
-                "action": action,
-                "target": target,
-                "dialogue": f"Random decision by {node_id}.",
-            }
+            target = (
+                random.choice(neighbors)
+                if neighbors and action in ("forge_alliance", "break_alliance", "broadcast_state")
+                else None
+            )
+            return Action(
+                action=action,
+                target=target,
+                vote=current_vote,
+                dialogue=f"Random decision by {node_id}.",
+            )
 
         # Scripted consensus-seeking behavior
-        if not inbox_messages:
-            return {
-                "action": "hold",
-                "target": None,
-                "dialogue": f"{node_id} received no messages; holding current allegiance.",
-            }
+        if not inbox:
+            return Action(
+                action="hold",
+                target=None,
+                vote=current_vote,
+                dialogue=f"{node_id} received no messages; holding current allegiance.",
+            )
 
         # Inspect beliefs reported by neighbors
         candidates = [current_belief]
-        for msg in inbox_messages:
+        for msg in inbox:
             payload = msg.get("payload", {})
             belief = payload.get("belief") or msg.get("belief")
             if belief:
@@ -70,14 +75,16 @@ class DummyAgent:
         best_candidate = min(candidates)
 
         if best_candidate != current_belief:
-            return {
-                "action": "forge_alliance",
-                "target": best_candidate,
-                "dialogue": f"{node_id} accepts alliance with {best_candidate}.",
-            }
+            return Action(
+                action="forge_alliance",
+                target=best_candidate,
+                vote=best_candidate,
+                dialogue=f"{node_id} accepts alliance with {best_candidate}.",
+            )
 
-        return {
-            "action": "broadcast_state",
-            "target": current_belief,
-            "dialogue": f"{node_id} continues supporting {current_belief}.",
-        }
+        return Action(
+            action="broadcast_state",
+            target=current_belief,
+            vote=current_belief,
+            dialogue=f"{node_id} continues supporting {current_belief}.",
+        )

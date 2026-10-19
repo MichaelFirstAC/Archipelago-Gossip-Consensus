@@ -5,6 +5,7 @@ import inspect
 import random
 from typing import Any, Dict, List, Optional, Tuple
 
+from src.agents.schema import Action
 from src.network.link import Link
 from src.network.node import Node
 from src.simulation.consensus import check_consensus
@@ -78,40 +79,34 @@ class GossipProtocol:
 
             # Support both synchronous and asynchronous decide() methods
             decide_fn = node.agent.decide
+            state = {**node.get_state(), "neighbors": node.neighbors}
             try:
                 if inspect.iscoroutinefunction(decide_fn):
-                    action_data = await decide_fn(
-                        node_id=node.id,
-                        current_belief=node.belief,
-                        inbox_messages=inbox_messages,
-                        known_neighbors=node.neighbors,
-                    )
+                    action = await decide_fn(state, inbox_messages)
                 else:
-                    action_data = decide_fn(
-                        node_id=node.id,
-                        current_belief=node.belief,
-                        inbox_messages=inbox_messages,
-                        known_neighbors=node.neighbors,
-                    )
+                    action = decide_fn(state, inbox_messages)
             except Exception as e:
                 self.parse_failures += 1
-                action_data = {"action": "hold", "target": None, "dialogue": f"Fallback error: {e}"}
+                action = Action(
+                    action="hold",
+                    target=None,
+                    vote=node.vote,
+                    dialogue=f"Fallback error: {e}",
+                )
 
-            self._apply_action(node, action_data)
+            self._apply_action(node, action)
 
         converged, _ = check_consensus(self.nodes)
         return converged
 
-    def _apply_action(self, node: Node, action_data: Dict[str, Any]) -> None:
+    def _apply_action(self, node: Node, action: Action) -> None:
         """Apply the chosen action to the node's internal state."""
-        action = action_data.get("action", "hold")
-        target = action_data.get("target")
-
-        if action == "forge_alliance" and target:
-            node.belief = str(target)
-        elif action == "break_alliance":
+        if action.action == "forge_alliance" and action.target:
+            node.belief = str(action.target)
+        elif action.action == "break_alliance":
             node.belief = node.id
         # 'hold' and 'broadcast_state' retain current belief
+        node.vote = action.vote
 
     async def run(self, max_rounds: int = 15) -> Dict[str, Any]:
         """Drive gossip rounds until consensus or max_rounds is reached.

@@ -1,71 +1,102 @@
 # Roadmap: Archipelago Gossip Consensus Simulation
 
-Companion to `SPEC.md`. Work through phases in order — do not start a phase until the previous one's "Done when" criteria are met. Each mission/task given to the agent should target exactly one phase (or one sub-item within it), not several at once.
+Companion to `SPEC.md`. Work through phases in order. Do not start a phase until the previous one's "Done when" criteria are met. Each mission given to the agent should target exactly one phase (or one sub-phase), not several at once.
+
+**Status:** Phase 0 and Phase 1 are complete. Next up: Phase 2A.
 
 ---
 
-## Phase 0 — Project Scaffolding
-- [x] Create repo structure exactly as laid out in `SPEC.md` §3
-- [x] `requirements.txt` populated from `SPEC.md` §7, virtual env created, deps installed
-- [x] Empty `config/experiment.yaml` created with the shape from `SPEC.md` §6 (values can be placeholders for now)
-
-**Done when:** `pip install -r requirements.txt` succeeds and every file/folder in §3 exists (even if empty).
+## Phase 0: Project Scaffolding (DONE)
+- [x] Create repo structure as laid out in `SPEC.md` §3
+- [x] `requirements.txt` populated, virtual env created, deps installed
+- [x] `config/experiment.yaml` created with the shape from `SPEC.md` §6
 
 ---
 
-## Phase 1 — Network Layer (dummy agents only)
-- [x] `network/node.py`: `Node` class (id, neighbors, inbox, state)
-- [x] `network/topology.py`: `build_mesh(n)` and `build_hub_spoke(n)`
-- [x] `network/link.py`: async send with latency sleep + probabilistic drop, emits a log event either way
-- [x] `network/gossip.py`: push-gossip round loop, respects `max_rounds`
-- [x] `agents/dummy_agent.py`: returns a scripted or random valid action instantly (no LLM call)
-- [x] `simulation/consensus.py`: convergence check
-- [x] `simulation/runner.py`: runs one full trial end-to-end using dummy agents
-- [x] `logging/run_logger.py`: writes the event log and trial-summary log for one trial
+## Phase 1: Network Layer, dummy agents only (DONE)
+- [x] `network/node.py`, `network/topology.py`, `network/link.py`, `network/gossip.py`
+- [x] `agents/dummy_agent.py`
+- [x] `simulation/consensus.py`, `simulation/runner.py`
+- [x] `logging/run_logger.py` (event log and trial summary)
 
-**Done when:** running one trial at `latency=0, loss=0` with dummy agents reaches consensus every time, and running it at `loss=1.0` never reaches consensus (sanity-checks that the drop mechanism actually blocks convergence). Event log and trial-summary CSV both produced and readable.
+**Done when (already met):** at `latency=0, loss=0` dummy agents always reach consensus; at `loss=1.0` they never do; both log files are produced.
 
 ---
 
-## Phase 2 — Agent Layer (real LLM)
-- [ ] `agents/schema.py`: pydantic model for the action JSON (`action`, `target`, `dialogue`)
-- [ ] `agents/archetypes.py`: cooperative / self-interested / adversarial system-prompt fragments
-- [ ] `agents/llm_agent.py`: loads local model once, builds prompt from state + archetype, calls via `litellm`, validates against schema, retry-once-then-fail policy
-- [ ] Swap `dummy_agent.py` for `llm_agent.py` in `runner.py` behind a config flag (keep dummy mode available for future debugging)
+## Phase 2A: Baseline Agent and Belief Module (non-LLM)
+Do this before the LLM. It needs no model, so it is fast to test, and it gives us a trusted reference for the LLM later.
 
-**Done when:** a single manual trial with 4–6 real LLM agents produces valid, schema-passing JSON actions on most turns, and a forced-invalid-output test confirms the retry-once-then-log-failure path actually triggers instead of crashing the run.
+Small changes to Phase 1 code first:
+- [x] Add a `vote` field to node state if it is not there (see `SPEC.md` §5.1)
+- [x] Add `agents/base_agent.py` with the shared `decide(state, inbox) -> Action` interface; make `dummy_agent.py` implement it
+- [x] Add `agents/schema.py` with the action schema (now including `vote`)
 
----
+New components:
+- [ ] `agents/belief.py`: belief vector per node, DeGroot-style update with trust weights and openness, consensus score (max pairwise total-variation distance)
+- [ ] `agents/archetypes.py`: three presets with baseline utility weights and openness (LLM prompt fragments can be filled in Phase 2B)
+- [ ] `agents/baseline_agent.py`: utility-based agent that picks `vote` and `action` from its belief vector
+- [ ] `agents/factory.py`: builds the agent named by `agent_type` in config
+- [ ] Update `simulation/consensus.py` to use the belief consensus score with `epsilon` from config
+- [ ] Add the decision log (`SPEC.md` §5.4) to `run_logger.py`, including `baseline_vote`
 
-## Phase 3 — Batch Experiment Runner
-- [ ] `simulation/monte_carlo.py`: reads `config/experiment.yaml`, expands the primary grid (latency × loss) and secondary grid (topology subset), runs `runs_per_condition` trials per cell
-- [ ] Confirm resumability: if the run is interrupted, already-completed trials aren't silently overwritten or re-run
-- [ ] **Pilot sweep first:** run the full grid at `runs_per_condition: 2` to check total runtime and catch crashes before committing to the real run
-- [ ] **Full sweep:** run at the real `runs_per_condition` (e.g. 15) from `config/experiment.yaml`
-
-**Done when:** `data/runs/` contains one trial-summary row and one event-log file per trial across every condition in both grids, with no crashed/missing cells.
-
----
-
-## Phase 4 — Analysis
-- [ ] `analysis/load_logs.py`: concatenates all trial-summary CSVs into one dataframe
-- [ ] `analysis/stats.py`: Two-Way ANOVA (latency × loss on time-to-consensus and on failure rate) + Mann-Whitney U for the topology comparison
-- [ ] `analysis/plots.py`: failure-rate heatmap (latency × loss), time-to-consensus line plot faceted by latency, topology comparison plot
-- [ ] Parse/action-failure rate reported descriptively alongside the main results
-
-**Done when:** all figures needed for the paper's Results section are generated from `data/runs/` with one script run, and the ANOVA output (F-statistics, p-values) is saved somewhere reusable (not just printed to console).
+**Done when:**
+- unit tests show the belief update behaves correctly on a tiny hand-checkable example (e.g. 3 nodes, known trust matrix, one update step matches the hand calculation)
+- a baseline-agent trial at `latency=0, loss=0` reaches consensus reliably, and at `loss=1.0` never does
+- the decision log and trial summary are written with the new columns
 
 ---
 
-## Phase 5 — Visualization (demo only, not required for results)
-- [ ] `viz/map_view.py`: static island layout rendering for N agents
-- [ ] `viz/playback.py`: reads one saved event log, animates messages between islands frame by frame, flashes dropped messages, updates node color on state change
+## Phase 2B: LLM Agent
+- [ ] `agents/llm_agent.py`: loads the local model once, builds a first-person prompt from archetype + state + inbox, calls it via `litellm`, validates against `schema.py`
+- [ ] Retry-once-then-log-failure policy
+- [ ] Efficiency rules: short prompts, `max_new_tokens` cap, fixed temperature and seed, log tokens and decision latency per call
+- [ ] Fill in the LLM prompt fragments in `archetypes.py`
+- [ ] Register the LLM agent in `factory.py` behind `agent_type: llm` (keep dummy and baseline available)
 
-**Done when:** a single saved run from Phase 1 or 2 can be replayed visually from start to consensus (or timeout).
+**Done when:** a manual trial with 4–6 LLM agents produces schema-valid actions on most turns, and a forced-invalid-output test confirms the retry path logs a failure instead of crashing. Fix the model choice here and do not change it afterward.
+
+---
+
+## Phase 3: Batch Experiment Runner
+- [ ] `simulation/monte_carlo.py`: reads `config/experiment.yaml`, expands the primary and secondary grids, runs the right number of trials per cell for each agent type
+- [ ] Resumability: an interrupted sweep does not overwrite or repeat finished trials
+- [ ] **Pilot sweep first:** full grid at `runs_per_condition: 2` for the LLM arm, to check runtime and catch crashes
+- [ ] **Baseline sweep:** primary grid at `baseline_runs_per_condition` (cheap, can run first)
+- [ ] **Full LLM sweep:** primary grid, then the secondary topology subset, at the real `runs_per_condition`
+
+**Done when:** `data/runs/` has one trial-summary row per trial across every condition and both agent types, plus decision logs, with no crashed or missing cells.
+
+---
+
+## Phase 4: Analysis
+- [ ] `analysis/load_logs.py`: loads trial summaries and decision logs
+- [ ] `analysis/stats.py`: Two-Way ANOVA (latency × loss), failure-rate analysis, Mann-Whitney U for topology (RM design)
+- [ ] AI comparison in `stats.py`: LLM vs baseline on convergence rate and rounds to consensus
+- [ ] AI metrics: JSON validity, action validity, LLM–baseline agreement, decision consistency, decision latency and tokens (`SPEC.md` §5.5)
+- [ ] `analysis/plots.py`: failure-rate heatmap, time-to-consensus plots, topology plot, LLM-vs-baseline plot
+- [ ] Save statistical outputs (F-statistics, p-values) to files, not just the console
+
+**Done when:** every figure and table needed for the Results section is produced by one script run from `data/runs/`.
+
+---
+
+## Phase 5: Visualization (demo only)
+- [ ] `viz/map_view.py` and `viz/playback.py`
+
+**Done when:** one saved run replays visually from start to consensus (or timeout).
+
+---
+
+## Phase 6: Reports and Presentation
+- [ ] **AI + DS report** (max 2 members on the AI side): background, methodology, implementation (LLM agent, baseline agent and belief math, gossip and fault injection), results (network metrics, AI metrics, LLM vs baseline), ethical considerations
+- [ ] **RM report**: research design only (RQs, hypotheses, variables, ethics, references)
+- [ ] Presentation and live demo
+- [ ] Clean the code (readable, no dead code) and write the README, since implementation efficiency and clarity are graded
 
 ---
 
 ## Notes for whoever (or whatever agent) is driving this
-- Phases 1 and 2 are the highest-risk phases — don't let the agent skip ahead to Phase 3 until Phase 2's manual validation is actually confirmed, since a flaky LLM-JSON pipeline will silently corrupt the whole Monte Carlo dataset if it's not caught first.
-- Phase 3's pilot sweep exists specifically to catch runtime/compute problems before burning hours on the full run — don't skip it even if Phase 2 looked solid in isolation.
-- Keep `dummy_agent.py` in the codebase after Phase 2 — it's the fastest way to isolate "is this a network bug or an LLM bug" if something breaks later.
+- Phase 2A before 2B: the baseline is the fast, deterministic reference. If the LLM later behaves oddly, compare it to the baseline to find out whether the network or the model is at fault.
+- Do not let the agent skip to Phase 3 until 2B's manual validation is confirmed. A flaky LLM-JSON pipeline silently corrupts the whole dataset.
+- The baseline arm is an AI-course comparison, not part of the RM research questions. Keep the RM analysis (ANOVA, topology) on the LLM arm so the RM report matches its proposal.
+- Keep `dummy_agent.py` after Phase 2. It is the fastest way to isolate network bugs.
