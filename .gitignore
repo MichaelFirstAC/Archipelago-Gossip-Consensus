@@ -4,3 +4,4 @@ __pycache__/
 *.pyc
 data/runs/*.csv
 .pytest_cache/
+data/runs_test*/

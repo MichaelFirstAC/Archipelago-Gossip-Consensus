@@ -1,35 +1,37 @@
 """Consensus evaluation logic for the Archipelago simulation."""
 
 from typing import List, Optional, Tuple
+
+from src.agents.belief import consensus_score
 from src.network.node import Node
 
+DEFAULT_EPSILON = 0.05
 
-def check_consensus(nodes: List[Node]) -> Tuple[bool, Optional[str]]:
-    """Determine whether all nodes have converged on the same belief state.
 
-    Args:
-        nodes: List of Node instances participating in the simulation.
+def check_consensus(nodes: List[Node], epsilon: float = DEFAULT_EPSILON) -> Tuple[bool, Optional[str]]:
+    """Determine whether all nodes have converged on the same outcome.
+
+    Consensus means every node's vote is the same AND the maximum pairwise
+    total-variation distance between belief vectors is below ``epsilon``.
 
     Returns:
-        A tuple of (converged: bool, consensus_value: Optional[str]).
-        If all nodes hold the exact same non-empty belief, converged is True and
-        consensus_value is that shared belief. Otherwise (False, None).
+        (converged, consensus_value). consensus_value is the shared vote when
+        converged, otherwise None.
     """
-    if not nodes:
+    if not nodes or any(node.belief_vector is None for node in nodes):
         return False, None
 
-    target = nodes[0].belief
-    if target is None:
+    votes = {node.vote for node in nodes}
+    if len(votes) != 1:
         return False, None
 
-    for node in nodes[1:]:
-        if node.belief != target:
-            return False, None
+    if consensus_score([node.belief_vector for node in nodes]) >= epsilon:
+        return False, None
 
-    return True, target
+    return True, votes.pop()
 
 
-def is_converged(nodes: List[Node]) -> bool:
+def is_converged(nodes: List[Node], epsilon: float = DEFAULT_EPSILON) -> bool:
     """Convenience boolean check for convergence."""
-    converged, _ = check_consensus(nodes)
+    converged, _ = check_consensus(nodes, epsilon)
     return converged

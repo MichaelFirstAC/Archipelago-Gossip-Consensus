@@ -101,7 +101,7 @@ analysis/ → stats.py → plots.py
 ### 5.1 Network layer (`src/network/`) — built in Phase 1
 - **`Node`**: id, faction name, neighbor ids, inbox queue, current state. State must include a `vote` (the outcome this faction currently prefers, e.g. a candidate unifying leader). Add the field if Phase 1 didn't.
 - **`Link`**: `await asyncio.sleep(latency_ms / 1000)`, then drop if `random.random() < loss_rate`; otherwise deliver. Every call is logged either way.
-- **`Gossip`**: each round every node pushes its state to one (or k) random neighbors. Stops at `max_rounds` or when consensus is reached.
+- **`Gossip`**: each round every node pushes its belief vector to one (or k, `fanout`) random neighbors and waits at most `round_ms` (the gossip period) for delivery. A message slower than the period keeps flying and lands in a later round, so it is used late with stale beliefs; this is how latency affects rounds-to-consensus (latencies below the period behave like zero latency). Stops at `max_rounds` or when consensus is reached; messages still in flight are cancelled.
 - **`Topology`**: `build_mesh(n)`, `build_hub_spoke(n)`.
 
 ### 5.2 Agent layer (`src/agents/`)
@@ -119,7 +119,7 @@ All agents implement `decide(state, inbox) -> Action` so the network never knows
 
 **`belief.py` (our own component, shared by the baseline and by the metrics)**
 - Each node keeps a belief vector over the K candidate outcomes (probabilities summing to 1).
-- **DeGroot-style update:** `b_i(t+1) = (1 − s_i) · b_i(t) + s_i · Σ_j T_ij · b_j(t)`, where `s_i` is the faction's openness (stubbornness = 1 − s_i, set by archetype) and `T_ij` are normalized trust weights over the neighbors whose messages arrived this round. Dropped messages simply don't contribute, which is how network loss reaches the agent.
+- **DeGroot-style update:** `b_i(t+1) = (1 − s_i) · b_i(t) + s_i · Σ_j T_ij · b_j(t)`, where `s_i` is the faction's openness (stubbornness = 1 − s_i, set by archetype) and `T_ij` are normalized trust weights over the neighbors whose messages arrived this round. Dropped messages simply don't contribute, which is how network loss reaches the agent. The gossip loop applies this update to every node, whatever its agent type; the agent then chooses its `vote` and `action` from the updated state. This is what makes `baseline_vote` available for the LLM arm.
 - **Consensus score:** maximum pairwise total-variation distance between nodes' beliefs (0 = identical). Consensus = all nodes' argmax votes agree and the score is below a threshold `epsilon` (config).
 
 **`baseline_agent.py`**
@@ -175,7 +175,9 @@ Standalone replay of one saved event log: islands as nodes, animated in-flight m
 
 ```yaml
 agents: 5
-max_rounds: 15
+max_rounds: 20
+fanout: 1                       # random neighbors each node pushes to per round
+round_ms: 1000                  # gossip period; slower messages arrive in later rounds
 runs_per_condition: 15          # LLM arm
 baseline_runs_per_condition: 30 # baseline arm (cheap)
 agent_type: "llm"               # llm | baseline | dummy

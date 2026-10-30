@@ -32,12 +32,12 @@ Small changes to Phase 1 code first:
 - [x] Add `agents/schema.py` with the action schema (now including `vote`)
 
 New components:
-- [ ] `agents/belief.py`: belief vector per node, DeGroot-style update with trust weights and openness, consensus score (max pairwise total-variation distance)
-- [ ] `agents/archetypes.py`: three presets with baseline utility weights and openness (LLM prompt fragments can be filled in Phase 2B)
-- [ ] `agents/baseline_agent.py`: utility-based agent that picks `vote` and `action` from its belief vector
-- [ ] `agents/factory.py`: builds the agent named by `agent_type` in config
-- [ ] Update `simulation/consensus.py` to use the belief consensus score with `epsilon` from config
-- [ ] Add the decision log (`SPEC.md` §5.4) to `run_logger.py`, including `baseline_vote`
+- [x] `agents/belief.py`: belief vector per node, DeGroot-style update with trust weights and openness, consensus score (max pairwise total-variation distance)
+- [x] `agents/archetypes.py`: three presets with baseline utility weights and openness (LLM prompt fragments can be filled in Phase 2B)
+- [x] `agents/baseline_agent.py`: utility-based agent that picks `vote` and `action` from its belief vector
+- [x] `agents/factory.py`: builds the agent named by `agent_type` in config
+- [x] Update `simulation/consensus.py` to use the belief consensus score with `epsilon` from config
+- [x] Add the decision log (`SPEC.md` §5.4) to `run_logger.py`, including `baseline_vote`
 
 **Done when:**
 - unit tests show the belief update behaves correctly on a tiny hand-checkable example (e.g. 3 nodes, known trust matrix, one update step matches the hand calculation)
@@ -100,3 +100,6 @@ New components:
 - Do not let the agent skip to Phase 3 until 2B's manual validation is confirmed. A flaky LLM-JSON pipeline silently corrupts the whole dataset.
 - The baseline arm is an AI-course comparison, not part of the RM research questions. Keep the RM analysis (ANOVA, topology) on the LLM arm so the RM report matches its proposal.
 - Keep `dummy_agent.py` after Phase 2. It is the fastest way to isolate network bugs.
+- Expect a small persona floor: with the default archetype mix the baseline fails to unify in about 3% of zero-loss mesh trials (a self-interested or adversarial faction holds out). Treat the `latency=0, loss=0` cell as the control and report effects relative to it.
+- Latency acts through the gossip period (`round_ms`): a message slower than one period is applied in a later round with stale beliefs. With `round_ms: 1000`, 0 ms and 500 ms behave the same; 2000 ms is the level that hurts. Lower `round_ms` makes 500 ms matter too but pushes 2000 ms to near-total failure within 20 rounds.
+- Hub-and-spoke converges much more slowly than mesh because spokes only hear from the hub (about one message per four rounds). Expect it to sit near the `max_rounds` ceiling under loss; analyze it with rounds-to-consensus and failure rate, not rounds alone.

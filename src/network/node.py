@@ -3,6 +3,8 @@
 import asyncio
 from typing import Any, Dict, List, Optional
 
+import numpy as np
+
 
 class Node:
     """A peer node in the gossip consensus simulation.
@@ -13,7 +15,9 @@ class Node:
         neighbors: List of peer node IDs adjacent to this node.
         inbox: Asynchronous queue for incoming messages.
         belief: Current belief/allegiance state (e.g., designated leader or allied faction).
+        belief_vector: Probability vector over the candidate leaders (None until initialized).
         vote: The outcome this faction currently prefers (preferred unifying leader).
+        archetype: Faction persona; its openness drives the DeGroot update.
         agent: The decision agent (DummyAgent or LLMAgent) governing this node.
     """
 
@@ -24,12 +28,16 @@ class Node:
         neighbors: Optional[List[str]] = None,
         initial_belief: Optional[str] = None,
         agent: Any = None,
+        belief_vector: Optional[np.ndarray] = None,
+        archetype: Any = None,
     ):
         self.id = node_id
         self.faction_name = faction_name or node_id.replace("_", " ").title()
         self.neighbors: List[str] = list(neighbors) if neighbors is not None else []
         self.belief: str = initial_belief if initial_belief is not None else node_id
         self.vote: str = self.belief
+        self.belief_vector: Optional[np.ndarray] = belief_vector
+        self.archetype: Any = archetype
         self.agent: Any = agent
         self.inbox: asyncio.Queue = asyncio.Queue()
 
@@ -55,6 +63,7 @@ class Node:
             "faction_name": self.faction_name,
             "belief": self.belief,
             "vote": self.vote,
+            "belief_vector": None if self.belief_vector is None else self.belief_vector.tolist(),
         }
 
     def reset(self, initial_belief: Optional[str] = None) -> None:

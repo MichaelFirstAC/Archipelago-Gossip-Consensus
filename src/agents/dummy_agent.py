@@ -3,6 +3,7 @@
 import random
 from typing import Any, Dict, List, Optional
 
+from src.agents import belief as bel
 from src.agents.base_agent import BaseAgent
 from src.agents.schema import Action
 
@@ -14,8 +15,8 @@ class DummyAgent(BaseAgent):
     """Scripted dummy agent providing immediate valid action decisions without LLM calls.
 
     Attributes:
-        mode: 'scripted' (default) for deterministic consensus propagation,
-              or 'random' for randomized action sampling.
+        mode: 'scripted' (default) always votes for the candidate its belief vector
+              favors; 'random' samples actions and votes at random.
         node_id: Optional ID of the node this agent is bound to.
     """
 
@@ -26,18 +27,17 @@ class DummyAgent(BaseAgent):
         self.node_id = node_id
 
     def decide(self, state: Dict[str, Any], inbox: List[Dict[str, Any]]) -> Action:
-        """Generate an action decision based on incoming gossip messages.
+        """Generate an action decision from the node state and this round's inbox.
 
         Args:
-            state: Node state with 'node_id', 'belief', 'vote' and 'neighbors'.
+            state: Node state with 'node_id', 'vote', 'belief_vector', 'candidates', 'neighbors'.
             inbox: List of message dictionaries delivered during this round.
 
         Returns:
             An Action matching the agent action schema.
         """
         node_id = state["node_id"]
-        current_belief = state["belief"]
-        current_vote = state.get("vote", current_belief)
+        candidates = state["candidates"]
         neighbors = state.get("neighbors") or []
 
         if self.mode == "random":
@@ -50,41 +50,21 @@ class DummyAgent(BaseAgent):
             return Action(
                 action=action,
                 target=target,
-                vote=current_vote,
+                vote=random.choice(candidates),
                 dialogue=f"Random decision by {node_id}.",
             )
 
-        # Scripted consensus-seeking behavior
+        vote = candidates[bel.top_candidate(state["belief_vector"])]
         if not inbox:
             return Action(
                 action="hold",
                 target=None,
-                vote=current_vote,
-                dialogue=f"{node_id} received no messages; holding current allegiance.",
+                vote=vote,
+                dialogue=f"{node_id} received no messages; holding.",
             )
-
-        # Inspect beliefs reported by neighbors
-        candidates = [current_belief]
-        for msg in inbox:
-            payload = msg.get("payload", {})
-            belief = payload.get("belief") or msg.get("belief")
-            if belief:
-                candidates.append(belief)
-
-        # Consensus target: prioritize minimum lexicographical candidate (e.g. faction_0)
-        best_candidate = min(candidates)
-
-        if best_candidate != current_belief:
-            return Action(
-                action="forge_alliance",
-                target=best_candidate,
-                vote=best_candidate,
-                dialogue=f"{node_id} accepts alliance with {best_candidate}.",
-            )
-
         return Action(
             action="broadcast_state",
-            target=current_belief,
-            vote=current_belief,
-            dialogue=f"{node_id} continues supporting {current_belief}.",
+            target=None,
+            vote=vote,
+            dialogue=f"{node_id} supports {vote}.",
         )
