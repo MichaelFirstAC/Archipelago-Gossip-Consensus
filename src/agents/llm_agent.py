@@ -30,7 +30,7 @@ def _get_litellm() -> Any:
 DEFAULT_MODEL = "ollama/llama3.2:3b"
 DEFAULT_TEMPERATURE = 0.7
 DEFAULT_SEED = 42
-DEFAULT_MAX_NEW_TOKENS = 120
+DEFAULT_MAX_NEW_TOKENS = 64
 
 # Process-level registry of models already initialized/warmed in this process.
 _LOADED_MODELS: Set[str] = set()
@@ -191,6 +191,7 @@ class LLMAgent(BaseAgent):
                 "type": "json_schema",
                 "json_schema": {"schema": Action.model_json_schema()},
             }
+            kwargs["num_ctx"] = 512
             kwargs["keep_alive"] = "30m"
 
         fn = self._completion_fn or _get_litellm().completion

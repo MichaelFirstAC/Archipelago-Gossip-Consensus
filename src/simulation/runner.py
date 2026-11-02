@@ -38,6 +38,7 @@ async def run_trial(
     log_dir: str = "data/runs",
     save_logs: bool = True,
     master_summary_filename: str = "trials_summary.csv",
+    time_scale: float = 1.0,
 ) -> Dict[str, Any]:
     """Execute a single simulation trial under specified conditions.
 
@@ -104,12 +105,12 @@ async def run_trial(
 
     # 3. Logger and Link setup
     logger = RunLogger(trial_id=trial_id) if save_logs else None
-    link = Link(latency_ms=latency_ms, loss_rate=loss_rate, logger=logger)
+    link = Link(latency_ms=latency_ms, loss_rate=loss_rate, logger=logger, time_scale=time_scale)
 
     # 4. Drive gossip protocol rounds
     protocol = GossipProtocol(
         nodes=nodes, link=link, fanout=fanout, epsilon=epsilon, logger=logger,
-        agent_type=agent_type, round_ms=round_ms,
+        agent_type=agent_type, round_ms=round_ms, time_scale=time_scale,
     )
     result = await protocol.run(max_rounds=max_rounds)
 

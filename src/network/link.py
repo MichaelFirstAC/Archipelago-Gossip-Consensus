@@ -23,10 +23,12 @@ class Link:
         latency_ms: float = 0.0,
         loss_rate: float = 0.0,
         logger: Optional[RunLogger] = None,
+        time_scale: float = 1.0,
     ):
         self.latency_ms = float(latency_ms)
         self.loss_rate = float(loss_rate)
         self.logger = logger
+        self.time_scale = float(time_scale)
 
     async def send(
         self,
@@ -52,7 +54,7 @@ class Link:
         sent_at = time.time()
 
         if self.latency_ms > 0:
-            await asyncio.sleep(self.latency_ms / 1000.0)
+            await asyncio.sleep((self.latency_ms * self.time_scale) / 1000.0)
 
         # Drop determination
         dropped = random.random() < self.loss_rate

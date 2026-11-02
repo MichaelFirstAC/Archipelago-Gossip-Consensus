@@ -115,7 +115,28 @@ python -m src.simulation.runner --trial-id demo_hub --agent-type baseline --late
 
 ---
 
-### 5. Where Are the Output Logs?
+### 5. Run the Phase 3 Batch Experiment Sweeps (`monte_carlo.py`)
+
+`src.simulation.monte_carlo` reads `config/experiment.yaml`, expands the primary (9 `mesh` cells) and secondary (4 `hub_spoke` cells) grids, and is **fully resumable** (it automatically skips already-completed trials if interrupted).
+
+```powershell
+# Verify Phase 3 grid expansion & resumability unit tests
+python tests/test_phase3.py
+
+# Step 1: Baseline sweep across the primary grid (9 conditions x 30 runs = 270 trials, ~30s)
+python -m src.simulation.monte_carlo --agent-type baseline --grid primary
+
+# Step 2: LLM Pilot sweep across all 13 unique conditions (2 runs per condition = 26 trials)
+python -m src.simulation.monte_carlo --agent-type llm --grid all --runs 2
+
+# Step 3: Full LLM sweep across all 13 unique conditions (15 runs per condition = 195 trials;
+# automatically resumes from the 26 pilot trials and runs only the remaining 169 trials)
+python -m src.simulation.monte_carlo --agent-type llm --grid all
+```
+
+---
+
+### 6. Where Are the Output Logs?
 
 Every trial writes three CSV artefacts to `data/runs/`:
 1. **`data/runs/events_<trial_id>.csv`** — Per-message network log (`trial_id, round, sender, receiver, sent_at, latency_ms, dropped, delivered_at`).

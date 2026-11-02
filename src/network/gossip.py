@@ -38,6 +38,7 @@ class GossipProtocol:
         logger: Optional[RunLogger] = None,
         agent_type: str = "dummy",
         round_ms: Optional[float] = 1000.0,
+        time_scale: float = 1.0,
     ):
         self.nodes = nodes
         self.node_map: Dict[str, Node] = {n.id: n for n in nodes}
@@ -48,6 +49,7 @@ class GossipProtocol:
         self.logger = logger
         self.agent_type = agent_type
         self.round_ms = round_ms
+        self.time_scale = float(time_scale)
         self._in_flight: Set[asyncio.Task] = set()
         self.total_messages_sent = 0
         self.parse_failures = 0
@@ -100,7 +102,7 @@ class GossipProtocol:
                 send_tasks.append(task)
 
         if send_tasks:
-            timeout = None if self.round_ms is None else self.round_ms / 1000.0
+            timeout = None if self.round_ms is None else (self.round_ms * self.time_scale) / 1000.0
             await asyncio.wait(send_tasks, timeout=timeout)
             self.total_messages_sent += len(send_tasks)
 

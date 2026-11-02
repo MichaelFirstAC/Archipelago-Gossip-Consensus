@@ -58,8 +58,8 @@ New components:
 ---
 
 ## Phase 3: Batch Experiment Runner
-- [ ] `simulation/monte_carlo.py`: reads `config/experiment.yaml`, expands the primary and secondary grids, runs the right number of trials per cell for each agent type
-- [ ] Resumability: an interrupted sweep does not overwrite or repeat finished trials
+- [x] `simulation/monte_carlo.py`: reads `config/experiment.yaml`, expands the primary and secondary grids, runs the right number of trials per cell for each agent type
+- [x] Resumability: an interrupted sweep does not overwrite or repeat finished trials
 - [ ] **Pilot sweep first:** full grid at `runs_per_condition: 2` for the LLM arm, to check runtime and catch crashes
 - [ ] **Baseline sweep:** primary grid at `baseline_runs_per_condition` (cheap, can run first)
 - [ ] **Full LLM sweep:** primary grid, then the secondary topology subset, at the real `runs_per_condition`
