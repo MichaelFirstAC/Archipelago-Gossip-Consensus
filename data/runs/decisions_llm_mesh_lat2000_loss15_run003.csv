@@ -1,0 +1,101 @@
+trial_id,round,node,agent_type,valid_json,valid_action,vote,baseline_vote,decision_latency_ms,tokens
+llm_mesh_lat2000_loss15_run003,1,faction_0,llm,True,True,faction_0,faction_0,911.596,383
+llm_mesh_lat2000_loss15_run003,1,faction_1,llm,True,True,faction_4,faction_4,1029.901,388
+llm_mesh_lat2000_loss15_run003,1,faction_2,llm,True,True,faction_2,faction_2,884.249,385
+llm_mesh_lat2000_loss15_run003,1,faction_3,llm,True,True,faction_3,faction_3,942.365,406
+llm_mesh_lat2000_loss15_run003,1,faction_4,llm,True,True,faction_2,faction_2,860.719,395
+llm_mesh_lat2000_loss15_run003,2,faction_0,llm,True,True,faction_2,faction_2,641.176,390
+llm_mesh_lat2000_loss15_run003,2,faction_1,llm,True,True,faction_4,faction_4,820.613,391
+llm_mesh_lat2000_loss15_run003,2,faction_2,llm,True,True,faction_3,faction_3,1330.699,389
+llm_mesh_lat2000_loss15_run003,2,faction_3,llm,True,False,",",faction_3,821.183,403
+llm_mesh_lat2000_loss15_run003,2,faction_4,llm,True,False,", faction_0:0.11, faction_1:0.13, faction_2:0.35, faction_3:0.05, faction_4:0.36",faction_4,1461.585,433
+llm_mesh_lat2000_loss15_run003,3,faction_0,llm,True,True,faction_2,faction_2,1631.557,392
+llm_mesh_lat2000_loss15_run003,3,faction_1,llm,True,True,faction_4,faction_4,766.336,391
+llm_mesh_lat2000_loss15_run003,3,faction_2,llm,True,True,faction_3,faction_3,1196.769,391
+llm_mesh_lat2000_loss15_run003,3,faction_3,llm,True,False,",null,",faction_4,675.168,415
+llm_mesh_lat2000_loss15_run003,3,faction_4,llm,True,False,", ",faction_4,655.555,391
+llm_mesh_lat2000_loss15_run003,4,faction_0,llm,True,True,faction_4,faction_4,1010.722,395
+llm_mesh_lat2000_loss15_run003,4,faction_1,llm,True,True,faction_1,faction_2,1711.611,400
+llm_mesh_lat2000_loss15_run003,4,faction_2,llm,True,True,faction_3,faction_3,713.931,392
+llm_mesh_lat2000_loss15_run003,4,faction_3,llm,True,True,faction_3,faction_3,876.573,408
+llm_mesh_lat2000_loss15_run003,4,faction_4,llm,True,False,", ",faction_4,946.528,399
+llm_mesh_lat2000_loss15_run003,5,faction_0,llm,True,True,faction_4,faction_4,1012.053,395
+llm_mesh_lat2000_loss15_run003,5,faction_1,llm,True,True,faction_2,faction_2,1185.516,400
+llm_mesh_lat2000_loss15_run003,5,faction_2,llm,True,True,faction_2,faction_4,754.834,400
+llm_mesh_lat2000_loss15_run003,5,faction_3,llm,True,True,faction_3,faction_3,667.465,408
+llm_mesh_lat2000_loss15_run003,5,faction_4,llm,True,False,", ",faction_4,1094.15,399
+llm_mesh_lat2000_loss15_run003,6,faction_0,llm,True,True,faction_4,faction_4,875.91,388
+llm_mesh_lat2000_loss15_run003,6,faction_1,llm,True,True,faction_2,faction_2,1133.71,387
+llm_mesh_lat2000_loss15_run003,6,faction_2,llm,True,True,faction_3,faction_0,941.398,393
+llm_mesh_lat2000_loss15_run003,6,faction_3,llm,True,True,faction_4,faction_4,1111.111,424
+llm_mesh_lat2000_loss15_run003,6,faction_4,llm,True,False,", ",faction_4,885.826,399
+llm_mesh_lat2000_loss15_run003,7,faction_0,llm,True,True,faction_4,faction_4,1219.303,388
+llm_mesh_lat2000_loss15_run003,7,faction_1,llm,True,True,faction_2,faction_4,2217.713,392
+llm_mesh_lat2000_loss15_run003,7,faction_2,llm,True,True,faction_4,faction_4,809.198,391
+llm_mesh_lat2000_loss15_run003,7,faction_3,llm,True,True,faction_4,faction_4,1655.901,411
+llm_mesh_lat2000_loss15_run003,7,faction_4,llm,True,True,faction_1,faction_4,806.833,408
+llm_mesh_lat2000_loss15_run003,8,faction_0,llm,True,True,faction_2,faction_4,917.738,399
+llm_mesh_lat2000_loss15_run003,8,faction_1,llm,True,True,faction_4,faction_2,1067.348,391
+llm_mesh_lat2000_loss15_run003,8,faction_2,llm,True,True,faction_2,faction_4,689.841,395
+llm_mesh_lat2000_loss15_run003,8,faction_3,llm,True,True,faction_4,faction_4,930.238,411
+llm_mesh_lat2000_loss15_run003,8,faction_4,llm,True,False,", faction_0:0.09, faction_1:0.20, faction_2:0.23, faction_3:0.09, faction_4:0.38",faction_4,1574.892,437
+llm_mesh_lat2000_loss15_run003,9,faction_0,llm,True,True,faction_4,faction_4,658.059,391
+llm_mesh_lat2000_loss15_run003,9,faction_1,llm,True,True,faction_1,faction_4,1033.513,398
+llm_mesh_lat2000_loss15_run003,9,faction_2,llm,True,True,faction_4,faction_4,915.581,390
+llm_mesh_lat2000_loss15_run003,9,faction_3,llm,True,False,", faction_3 will wait for more info.",faction_4,907.157,426
+llm_mesh_lat2000_loss15_run003,9,faction_4,llm,True,False,", ",faction_4,776.888,391
+llm_mesh_lat2000_loss15_run003,10,faction_0,llm,True,True,faction_4,faction_4,632.28,398
+llm_mesh_lat2000_loss15_run003,10,faction_1,llm,True,True,faction_4,faction_4,628.841,390
+llm_mesh_lat2000_loss15_run003,10,faction_2,llm,True,True,faction_4,faction_4,799.237,393
+llm_mesh_lat2000_loss15_run003,10,faction_3,llm,True,True,faction_4,faction_4,803.759,409
+llm_mesh_lat2000_loss15_run003,10,faction_4,llm,True,True,faction_4,faction_4,1178.67,403
+llm_mesh_lat2000_loss15_run003,11,faction_0,llm,True,True,faction_4,faction_4,749.428,395
+llm_mesh_lat2000_loss15_run003,11,faction_1,llm,True,True,faction_1,faction_4,1251.316,397
+llm_mesh_lat2000_loss15_run003,11,faction_2,llm,True,True,faction_4,faction_4,848.848,391
+llm_mesh_lat2000_loss15_run003,11,faction_3,llm,True,False,",faction_0:0.11, faction_1:0.20, faction_2:0.23, faction_3:0.09, faction_4:0.37",faction_4,2557.609,450
+llm_mesh_lat2000_loss15_run003,11,faction_4,llm,True,False,",null,",faction_4,892.377,380
+llm_mesh_lat2000_loss15_run003,12,faction_0,llm,True,True,faction_4,faction_4,715.197,388
+llm_mesh_lat2000_loss15_run003,12,faction_1,llm,True,True,faction_4,faction_1,654.244,384
+llm_mesh_lat2000_loss15_run003,12,faction_2,llm,True,True,faction_4,faction_4,669.788,390
+llm_mesh_lat2000_loss15_run003,12,faction_3,llm,True,False,", faction_0:0.12, faction_1:0.19, faction_2:0.23, faction_3:0.10, faction_4:0.36",faction_4,1386.097,458
+llm_mesh_lat2000_loss15_run003,12,faction_4,llm,True,False,",",faction_4,789.036,417
+llm_mesh_lat2000_loss15_run003,13,faction_0,llm,True,True,faction_4,faction_4,659.904,388
+llm_mesh_lat2000_loss15_run003,13,faction_1,llm,True,True,faction_4,faction_4,736.278,388
+llm_mesh_lat2000_loss15_run003,13,faction_2,llm,True,True,faction_2,faction_4,773.023,393
+llm_mesh_lat2000_loss15_run003,13,faction_3,llm,True,True,faction_4,faction_4,969.549,415
+llm_mesh_lat2000_loss15_run003,13,faction_4,llm,True,False,", faction_0:0.09, faction_1:0.21, faction_2:0.23, faction_3:0.09, faction_4:0.39",faction_4,1511.641,435
+llm_mesh_lat2000_loss15_run003,14,faction_0,llm,True,True,faction_4,faction_4,1019.086,396
+llm_mesh_lat2000_loss15_run003,14,faction_1,llm,True,True,faction_1,faction_4,915.109,398
+llm_mesh_lat2000_loss15_run003,14,faction_2,llm,True,True,faction_2,faction_2,689.383,383
+llm_mesh_lat2000_loss15_run003,14,faction_3,llm,True,True,faction_4,faction_4,717.287,410
+llm_mesh_lat2000_loss15_run003,14,faction_4,llm,True,False,",null,",faction_4,545.693,394
+llm_mesh_lat2000_loss15_run003,15,faction_0,llm,True,True,faction_4,faction_4,713.952,388
+llm_mesh_lat2000_loss15_run003,15,faction_1,llm,True,True,faction_4,faction_1,655.098,384
+llm_mesh_lat2000_loss15_run003,15,faction_2,llm,True,True,faction_2,faction_2,551.505,383
+llm_mesh_lat2000_loss15_run003,15,faction_3,llm,True,True,faction_4,faction_4,685.051,431
+llm_mesh_lat2000_loss15_run003,15,faction_4,llm,True,False,",null,",faction_4,1090.92,380
+llm_mesh_lat2000_loss15_run003,16,faction_0,llm,True,True,faction_4,faction_4,652.258,388
+llm_mesh_lat2000_loss15_run003,16,faction_1,llm,True,True,faction_1,faction_4,815.334,398
+llm_mesh_lat2000_loss15_run003,16,faction_2,llm,True,True,faction_2,faction_2,595.648,383
+llm_mesh_lat2000_loss15_run003,16,faction_3,llm,True,False,",faction_0:0.12, faction_1:0.19, faction_2:0.23, faction_3:0.10, faction_4:0.36",faction_4,1941.186,450
+llm_mesh_lat2000_loss15_run003,16,faction_4,llm,True,True,faction_4,faction_4,628.503,399
+llm_mesh_lat2000_loss15_run003,17,faction_0,llm,True,True,faction_4,faction_4,690.067,390
+llm_mesh_lat2000_loss15_run003,17,faction_1,llm,True,True,faction_4,faction_4,1042.083,391
+llm_mesh_lat2000_loss15_run003,17,faction_2,llm,True,True,faction_2,faction_2,511.739,383
+llm_mesh_lat2000_loss15_run003,17,faction_3,llm,True,True,faction_4,faction_4,786.03,423
+llm_mesh_lat2000_loss15_run003,17,faction_4,llm,True,True,faction_4,faction_4,832.314,401
+llm_mesh_lat2000_loss15_run003,18,faction_0,llm,True,True,faction_4,faction_4,850.461,392
+llm_mesh_lat2000_loss15_run003,18,faction_1,llm,True,True,faction_4,faction_4,732.327,397
+llm_mesh_lat2000_loss15_run003,18,faction_2,llm,True,True,faction_4,faction_4,588.941,388
+llm_mesh_lat2000_loss15_run003,18,faction_3,llm,True,True,faction_4,faction_4,772.091,411
+llm_mesh_lat2000_loss15_run003,18,faction_4,llm,True,False,", ",faction_4,807.576,399
+llm_mesh_lat2000_loss15_run003,19,faction_0,llm,True,True,faction_4,faction_4,734.6,388
+llm_mesh_lat2000_loss15_run003,19,faction_1,llm,True,True,faction_4,faction_4,789.108,390
+llm_mesh_lat2000_loss15_run003,19,faction_2,llm,True,True,faction_2,faction_4,633.554,396
+llm_mesh_lat2000_loss15_run003,19,faction_3,llm,True,False,",faction_1",faction_4,812.34,418
+llm_mesh_lat2000_loss15_run003,19,faction_4,llm,True,False,", faction_2 backs faction_4.",faction_4,837.436,407
+llm_mesh_lat2000_loss15_run003,20,faction_0,llm,True,True,faction_4,faction_4,662.369,390
+llm_mesh_lat2000_loss15_run003,20,faction_1,llm,True,True,faction_4,faction_4,710.636,390
+llm_mesh_lat2000_loss15_run003,20,faction_2,llm,True,True,faction_2,faction_2,1099.381,382
+llm_mesh_lat2000_loss15_run003,20,faction_3,llm,False,True,faction_1,faction_4,2531.969,834
+llm_mesh_lat2000_loss15_run003,20,faction_4,llm,True,False,",",faction_4,633.615,406

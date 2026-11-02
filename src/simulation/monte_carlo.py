@@ -227,10 +227,15 @@ async def run_sweep(
 
     if verbose:
         pending_count = sum(1 for _, _, _, tid in plan if tid not in completed_ids)
+        done_count = total_planned - pending_count
+        pct = (done_count / total_planned * 100.0) if total_planned else 100.0
+        bar_len = 24
+        filled = int(round(bar_len * done_count / max(1, total_planned)))
+        bar = "#" * filled + "-" * (bar_len - filled)
         print(
-            f"[MonteCarlo] Planned: {total_planned} trials | "
-            f"Already completed: {total_planned - pending_count} | "
-            f"To run: {pending_count}"
+            f"[MonteCarlo] [{bar}] {done_count}/{total_planned} ({pct:.1f}%) | "
+            f"Remaining: {pending_count} trials",
+            flush=True,
         )
 
     for idx, (ag_type, cond, run_idx, tid) in enumerate(plan, start=1):
@@ -269,12 +274,16 @@ async def run_sweep(
             elapsed = time.perf_counter() - sweep_start
             avg_per_exec = elapsed / executed
             remaining_to_run = sum(1 for _, _, _, rem_tid in plan[idx:] if rem_tid not in completed_ids)
+            done_now = total_planned - remaining_to_run
+            pct_now = (done_now / total_planned * 100.0) if total_planned else 100.0
+            bar_len = 24
+            filled = int(round(bar_len * done_now / max(1, total_planned)))
+            bar = "#" * filled + "-" * (bar_len - filled)
             eta_s = avg_per_exec * remaining_to_run
             print(
-                f"[{idx}/{total_planned}] {tid} -> "
-                f"converged={summary['converged']} rounds={summary['rounds_to_consensus']} "
-                f"msgs={summary['total_messages']} fail={summary['parse_failures']} "
-                f"({dt:.1f}s, ETA {eta_s/60:.1f}m)",
+                f"[{bar}] {done_now}/{total_planned} ({pct_now:5.1f}%) | "
+                f"{tid} -> conv={summary['converged']} r={summary['rounds_to_consensus']} "
+                f"fail={summary['parse_failures']} | {dt:.1f}s/trial | ETA {eta_s/60:.1f}m",
                 flush=True,
             )
 
@@ -329,12 +338,21 @@ def main() -> None:
         help="Directory to write trial summaries, events, and decisions.",
     )
     parser.add_argument(
+        "--api-base",
+        type=str,
+        default=None,
+        help="Optional Ollama API base URL (e.g. http://10.69.71.196:11434).",
+    )
+    parser.add_argument(
         "--quiet",
         action="store_true",
         help="Suppress per-trial progress output.",
     )
 
     args = parser.parse_args()
+    if args.api_base:
+        import os
+        os.environ["OLLAMA_API_BASE"] = args.api_base
 
     if args.agent_type == "both":
         agent_types = ["baseline", "llm"]

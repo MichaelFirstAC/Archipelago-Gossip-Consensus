@@ -132,10 +132,13 @@ class LLMAgent(BaseAgent):
         belief_vec = state.get("belief_vector")
         if belief_vec is not None:
             arr = np.asarray(belief_vec, dtype=float)
-            top_id = candidates[bel.top_candidate(arr)]
+            top_idx = bel.top_candidate(arr)
+            top_id = candidates[top_idx]
+            top_val = float(arr[top_idx])
             scores_str = ", ".join(f"{cid}:{arr[i]:.2f}" for i, cid in enumerate(candidates))
         else:
             top_id = state.get("belief", current_vote)
+            top_val = 1.0
             scores_str = f"{top_id}:1.00"
 
         if inbox:
@@ -160,10 +163,10 @@ class LLMAgent(BaseAgent):
             f"I am {node_id}. Valid candidates: {', '.join(candidates)}. "
             f"Neighbors: {', '.join(neighbors) if neighbors else 'none'}.\n"
             f"My previous vote: {current_vote}. "
-            f"Current belief scores: [{scores_str}] (leading: {top_id}).\n"
+            f"Current belief scores: [{scores_str}] (leading candidate: {top_id} with score {top_val:.2f}).\n"
             f"Incoming gossip this round: {inbox_str}.\n"
-            f"Choose my next action and vote (vote MUST be one of {candidates}; "
-            f"target MUST be null or a valid faction id)."
+            f"Choose my next action and vote based on the belief scores above "
+            f"(vote MUST be one of {candidates}; target MUST be null or a valid faction id)."
         )
 
         return [
@@ -187,6 +190,11 @@ class LLMAgent(BaseAgent):
         if self.seed is not None:
             kwargs["seed"] = self.seed
         if litellm_model.startswith("ollama"):
+            api_base = os.environ.get("OLLAMA_API_BASE") or os.environ.get("OLLAMA_HOST")
+            if api_base:
+                if not api_base.startswith("http"):
+                    api_base = f"http://{api_base}"
+                kwargs["api_base"] = api_base
             kwargs["response_format"] = {
                 "type": "json_schema",
                 "json_schema": {"schema": Action.model_json_schema()},

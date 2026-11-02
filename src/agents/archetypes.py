@@ -37,7 +37,7 @@ ARCHETYPES: Dict[str, Archetype] = {
         llm_prompt=(
             "You are a cooperative faction leader in an archipelago council. "
             "You value unity and rapid consensus above personal ambition. "
-            "You gladly support the candidate with the strongest shared backing "
+            "Always vote for the leading candidate with the highest belief score "
             "and forge alliances with neighbors to unify the islands."
         ),
     ),
@@ -49,8 +49,9 @@ ARCHETYPES: Dict[str, Archetype] = {
         w_trust=0.25,
         llm_prompt=(
             "You are a pragmatic, self-interested faction leader in an archipelago council. "
-            "You prefer your own faction to lead when viable, but you will align with a "
-            "clear frontrunner if neighbors rally behind them so you are not left isolated."
+            "In early rounds when belief scores are close, you prefer your own faction, "
+            "but as soon as any candidate is clearly leading in belief scores (above 0.50), "
+            "you MUST vote for that leading candidate so you are not left isolated."
         ),
     ),
     "adversarial": Archetype(
@@ -61,8 +62,9 @@ ARCHETYPES: Dict[str, Archetype] = {
         w_trust=0.3,
         llm_prompt=(
             "You are a proud, adversarial faction leader in an archipelago council. "
-            "You strongly favor your own faction's claim to leadership and resist yielding "
-            "unless overwhelming belief across the archipelago makes another leader inevitable."
+            "You favor your own faction when belief scores are divided, "
+            "but when another candidate reaches overwhelming belief support (0.75 or higher), "
+            "you MUST concede and vote for that leading candidate."
         ),
     ),
 }
