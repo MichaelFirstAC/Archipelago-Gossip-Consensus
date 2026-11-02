@@ -2,7 +2,7 @@
 
 Companion to `SPEC.md`. Work through phases in order. Do not start a phase until the previous one's "Done when" criteria are met. Each mission given to the agent should target exactly one phase (or one sub-phase), not several at once.
 
-**Status:** Phase 0 and Phase 1 are complete. Next up: Phase 2A.
+**Status:** Phase 0, Phase 1, Phase 2A, and Phase 2B are complete. Next up: Phase 3.
 
 ---
 
@@ -46,12 +46,12 @@ New components:
 
 ---
 
-## Phase 2B: LLM Agent
-- [ ] `agents/llm_agent.py`: loads the local model once, builds a first-person prompt from archetype + state + inbox, calls it via `litellm`, validates against `schema.py`
-- [ ] Retry-once-then-log-failure policy
-- [ ] Efficiency rules: short prompts, `max_new_tokens` cap, fixed temperature and seed, log tokens and decision latency per call
-- [ ] Fill in the LLM prompt fragments in `archetypes.py`
-- [ ] Register the LLM agent in `factory.py` behind `agent_type: llm` (keep dummy and baseline available)
+## Phase 2B: LLM Agent (DONE)
+- [x] `agents/llm_agent.py`: loads the local model once, builds a first-person prompt from archetype + state + inbox, calls it via `litellm`, validates against `schema.py`
+- [x] Retry-once-then-log-failure policy
+- [x] Efficiency rules: short prompts, `max_new_tokens` cap, fixed temperature and seed, log tokens and decision latency per call
+- [x] Fill in the LLM prompt fragments in `archetypes.py`
+- [x] Register the LLM agent in `factory.py` behind `agent_type: llm` (keep dummy and baseline available)
 
 **Done when:** a manual trial with 4–6 LLM agents produces schema-valid actions on most turns, and a forced-invalid-output test confirms the retry path logs a failure instead of crashing. Fix the model choice here and do not change it afterward.
 

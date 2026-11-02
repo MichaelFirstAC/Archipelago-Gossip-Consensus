@@ -11,6 +11,7 @@ import numpy as np
 from src.agents import belief as bel
 from src.agents.archetypes import DEFAULT_MIX, assign_archetypes
 from src.agents.factory import AGENT_TYPES, create_agent
+from src.agents.llm_agent import DEFAULT_MODEL, DEFAULT_TEMPERATURE
 from src.logging.run_logger import RunLogger
 from src.network.gossip import GossipProtocol
 from src.network.link import Link
@@ -30,6 +31,8 @@ async def run_trial(
     round_ms: Optional[float] = 1000.0,
     archetype_mix: Optional[Dict[str, float]] = None,
     agent_type: str = "dummy",
+    model: str = DEFAULT_MODEL,
+    temperature: float = DEFAULT_TEMPERATURE,
     epsilon: float = DEFAULT_EPSILON,
     seed: Optional[int] = None,
     log_dir: str = "data/runs",
@@ -85,7 +88,15 @@ async def run_trial(
                 node_id=nid,
                 neighbors=adjacency.get(nid, []),
                 initial_belief=node_ids[bel.top_candidate(vector)],
-                agent=create_agent(agent_type, nid, node_ids, archetypes[nid]),
+                agent=create_agent(
+                    agent_type,
+                    nid,
+                    node_ids,
+                    archetypes[nid],
+                    model=model,
+                    temperature=temperature,
+                    seed=seed,
+                ),
                 belief_vector=vector,
                 archetype=archetypes[nid],
             )
@@ -139,6 +150,8 @@ def main():
     parser.add_argument("--fanout", type=int, default=1)
     parser.add_argument("--round-ms", type=float, default=1000.0)
     parser.add_argument("--agent-type", type=str, default="baseline", choices=list(AGENT_TYPES))
+    parser.add_argument("--model", type=str, default=DEFAULT_MODEL)
+    parser.add_argument("--temperature", type=float, default=DEFAULT_TEMPERATURE)
     parser.add_argument("--epsilon", type=float, default=DEFAULT_EPSILON)
     parser.add_argument("--seed", type=int, default=None)
     parser.add_argument("--log-dir", type=str, default="data/runs")
@@ -156,6 +169,8 @@ def main():
             fanout=args.fanout,
             round_ms=args.round_ms,
             agent_type=args.agent_type,
+            model=args.model,
+            temperature=args.temperature,
             epsilon=args.epsilon,
             seed=args.seed,
             log_dir=args.log_dir,

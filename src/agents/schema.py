@@ -1,8 +1,8 @@
 """Pydantic models for agent action JSON."""
 
-from typing import Literal, Optional
+from typing import Any, Literal, Optional
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_validator
 
 ActionType = Literal["forge_alliance", "break_alliance", "hold", "broadcast_state"]
 
@@ -23,3 +23,12 @@ class Action(BaseModel):
     target: Optional[str] = None
     vote: str
     dialogue: str = ""
+
+    @field_validator("target", mode="before")
+    @classmethod
+    def _normalize_null_target(cls, v: Any) -> Optional[str]:
+        if v is None:
+            return None
+        if isinstance(v, str) and v.strip().lower() in ("", "null", "none", "nil"):
+            return None
+        return v

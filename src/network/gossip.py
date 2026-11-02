@@ -137,7 +137,9 @@ class GossipProtocol:
                 action = await node.agent.decide(state, inbox)
             else:
                 action = node.agent.decide(state, inbox)
-            valid_json = True
+            valid_json = getattr(node.agent, "last_valid_json", True)
+            if getattr(node.agent, "last_parse_failed", False):
+                self.parse_failures += 1
         except Exception as e:
             self.parse_failures += 1
             valid_json = False

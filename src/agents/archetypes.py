@@ -28,9 +28,43 @@ class Archetype:
 
 
 ARCHETYPES: Dict[str, Archetype] = {
-    "cooperative": Archetype("cooperative", openness=0.8, w_gain=0.2, w_coop=0.5, w_trust=0.3),
-    "self_interested": Archetype("self_interested", openness=0.6, w_gain=0.5, w_coop=0.25, w_trust=0.25),
-    "adversarial": Archetype("adversarial", openness=0.4, w_gain=0.7, w_coop=0.0, w_trust=0.3),
+    "cooperative": Archetype(
+        "cooperative",
+        openness=0.8,
+        w_gain=0.2,
+        w_coop=0.5,
+        w_trust=0.3,
+        llm_prompt=(
+            "You are a cooperative faction leader in an archipelago council. "
+            "You value unity and rapid consensus above personal ambition. "
+            "You gladly support the candidate with the strongest shared backing "
+            "and forge alliances with neighbors to unify the islands."
+        ),
+    ),
+    "self_interested": Archetype(
+        "self_interested",
+        openness=0.6,
+        w_gain=0.5,
+        w_coop=0.25,
+        w_trust=0.25,
+        llm_prompt=(
+            "You are a pragmatic, self-interested faction leader in an archipelago council. "
+            "You prefer your own faction to lead when viable, but you will align with a "
+            "clear frontrunner if neighbors rally behind them so you are not left isolated."
+        ),
+    ),
+    "adversarial": Archetype(
+        "adversarial",
+        openness=0.4,
+        w_gain=0.7,
+        w_coop=0.0,
+        w_trust=0.3,
+        llm_prompt=(
+            "You are a proud, adversarial faction leader in an archipelago council. "
+            "You strongly favor your own faction's claim to leadership and resist yielding "
+            "unless overwhelming belief across the archipelago makes another leader inevitable."
+        ),
+    ),
 }
 
 DEFAULT_MIX: Dict[str, float] = {"cooperative": 0.5, "self_interested": 0.3, "adversarial": 0.2}

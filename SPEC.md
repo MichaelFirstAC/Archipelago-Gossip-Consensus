@@ -181,7 +181,7 @@ round_ms: 1000                  # gossip period; slower messages arrive in later
 runs_per_condition: 15          # LLM arm
 baseline_runs_per_condition: 30 # baseline arm (cheap)
 agent_type: "llm"               # llm | baseline | dummy
-model: "meta-llama/Meta-Llama-3-8B-Instruct"
+model: "ollama/llama3.2:3b"
 temperature: 0.7
 seed: 42
 epsilon: 0.05                   # consensus threshold on belief distance
