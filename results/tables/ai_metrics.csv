@@ -1,0 +1,3 @@
+agent_type,n_decisions,json_validity,action_validity,agreement_valid_votes,agreement_all_decisions,latency_ms_mean,latency_ms_median,tokens_mean,tokens_median
+baseline,16760,1.0,1.0,,,0.03786032219570406,0.027,0.0,0.0
+llm,16900,0.9994082840236687,0.8933096506808763,0.7420850443767386,0.6629585798816569,718.7905998224851,658.81,392.37355029585797,390.0

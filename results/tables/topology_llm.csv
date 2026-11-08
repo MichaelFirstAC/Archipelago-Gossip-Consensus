@@ -1,0 +1,4 @@
+metric,n_hub,n_mesh,u_statistic,p_value,rank_biserial,odds_ratio
+rounds (failures = cap),60,60,2598.5,5.895657409640449e-07,0.4436111111111112,
+rounds (converged only),9,33,239.0,0.005517550906036095,0.6094276094276094,
+"failure rate (odds ratio, hub vs mesh)",60,60,,7.14387952392161e-06,,6.925925925925926
