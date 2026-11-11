@@ -69,12 +69,12 @@ New components:
 ---
 
 ## Phase 4: Analysis
-- [ ] `analysis/load_logs.py`: loads trial summaries and decision logs
-- [ ] `analysis/stats.py`: Two-Way ANOVA (latency × loss), failure-rate analysis, Mann-Whitney U for topology (RM design)
-- [ ] AI comparison in `stats.py`: LLM vs baseline on convergence rate and rounds to consensus
-- [ ] AI metrics: JSON validity, action validity, LLM–baseline agreement, decision consistency, decision latency and tokens (`SPEC.md` §5.5)
-- [ ] `analysis/plots.py`: failure-rate heatmap, time-to-consensus plots, topology plot, LLM-vs-baseline plot
-- [ ] Save statistical outputs (F-statistics, p-values) to files, not just the console
+- [x] `analysis/load_logs.py`: loads trial summaries and decision logs
+- [x] `analysis/stats.py`: Two-Way ANOVA (latency × loss), failure-rate analysis, Mann-Whitney U for topology (RM design)
+- [x] AI comparison in `stats.py`: LLM vs baseline on convergence rate and rounds to consensus
+- [x] AI metrics: JSON validity, action validity, LLM–baseline agreement, decision consistency, decision latency and tokens (`SPEC.md` §5.5)
+- [x] `analysis/plots.py`: failure-rate heatmap, time-to-consensus plots, topology plot, LLM-vs-baseline plot
+- [x] Save statistical outputs (F-statistics, p-values) to files, not just the console
 
 **Done when:** every figure and table needed for the Results section is produced by one script run from `data/runs/`.
 
